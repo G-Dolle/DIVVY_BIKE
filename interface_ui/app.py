@@ -34,11 +34,5 @@ pred=round(my_prediction['fare'],3)
 st.header(f' ${pred}')"""
 
 
-stations=pd.read_csv('/Users/mariofernandez/code/G-Dolle/DIVVY_BIKE/data/stations.csv')
-stations.drop(columns=['id','name','dpcapacity'], inplace=True)
-stations.rename(columns={'latitude':'lat','longitude':'lon'},inplace=True)
-
-stations.lat=stations.lat.apply(lambda x: float(x.split()[0].replace(',','.')))
-stations.lon=stations.lon.apply(lambda x: float(x.split()[0].replace(',','.')))
 
 st.map(stations)
