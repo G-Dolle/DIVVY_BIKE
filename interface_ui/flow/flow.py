@@ -1,5 +1,5 @@
-from flow.ui_utils import get_coordinates
-from flow.ui_utils import get_nearest_n_stations
+from interface_ui.flow.ui_utils import get_coordinates
+from interface_ui.flow.ui_utils import get_nearest_n_stations
 import pandas as pd
 
 def transform_user_inputs(departure_address:object,
