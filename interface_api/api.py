@@ -36,7 +36,7 @@ def predict(pickup_datetime: datetime,  # 2013-07-06 17:18:00
 
     X_processed = preprocess_features(X_pred)
     y_pred = app.state.model.predict(X_processed)
-    return dict(fare=float(y_pred))
+    return dict(arrivals=y_pred_arrivals,departures=y_pred_dep)
 
 
 @app.get("/")
