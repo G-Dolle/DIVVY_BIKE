@@ -4,8 +4,8 @@ import numpy as np
 import math
 
 from ml_logic.data_import import get_weather_data, get_divvy_data
-from ml_logic.cleaning import weather_cleaning, cleaning_divvy_gen, merge_divvy_weather, features_target
-from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process, compute_geohash_stations
+from ml_logic.cleaning import compute_geohash_stations,weather_cleaning, cleaning_divvy_gen,cleaning_divvy_gen_agg, merge_divvy_weather, features_target
+from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
 
 
 
@@ -24,7 +24,7 @@ def preprocess(target_chosen):
 
     # Clean data & merge data
 
-    clean_divvy_df = cleaning_divvy_gen(raw_divvy_df)
+    clean_divvy_df = cleaning_divvy_gen_agg(raw_divvy_df)
     clean_weather_df = weather_cleaning(raw_weather_df)
 
     merged_df = merge_divvy_weather(clean_divvy_df, clean_weather_df)
@@ -38,7 +38,7 @@ def preprocess(target_chosen):
     print("features and target dataframes created")
 
     # preprocess features
-    preprocessor, X_processed_df, df_stations_reduced = preprocess_features(X)
+    preprocessor, X_processed_df = preprocess_features(X)
 
     print("features preprocessed")
 
@@ -54,12 +54,12 @@ def preprocess(target_chosen):
 
     print("Preprocessing of Training set is done")
 
-    return X_processed_df, y_processed_df, preprocessor, df_stations_reduced
+    return X_processed_df, y_processed_df, preprocessor
 
 
 # preprocessing a test set
 
-def preprocess_test(preprocessor, target_chosen, df_stations_reduced):
+def preprocess_test(preprocessor, target_chosen):
 
     # Import data
     quarter= os.environ.get("DIVVY_QUARTER_TEST")
@@ -72,7 +72,7 @@ def preprocess_test(preprocessor, target_chosen, df_stations_reduced):
 
     # Clean data & merge data
 
-    clean_divvy_df = cleaning_divvy_gen(raw_divvy_df)
+    clean_divvy_df = cleaning_divvy_gen_agg(raw_divvy_df)
     clean_weather_df = weather_cleaning(raw_weather_df)
 
     merged_df = merge_divvy_weather(clean_divvy_df, clean_weather_df)
@@ -85,13 +85,9 @@ def preprocess_test(preprocessor, target_chosen, df_stations_reduced):
 
     print("Test features and target dataframes created")
 
-    # Adding geohash
-    X_complete=X_test.merge(df_stations_reduced,how="left",on=["station_name"])
-    X_complete = X_complete.drop(columns=["station_name","station_id","dt_iso"])
-    #X_complete.geohash.replace(np.nan, "aaa", inplace=True)
     # transform the features test set
 
-    X_test_processed = preprocessor.transform(X_complete)
+    X_test_processed = preprocessor.transform(X_test)
 
     # preprocess target
 
