@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import datetime as dt
+from ml_logic.data_import import get_station_data
 
 def weather_cleaning(df):
     '''
@@ -95,7 +96,6 @@ def features_target(df, target):
     being created by identifying the target (nb_departures, nb_arrivals, ratio of the two)
     as an argument
     '''
-
 
     features_df = df.drop(columns=["ratio","nb_departures","nb_arrivals"])
     target_df =  df[target]

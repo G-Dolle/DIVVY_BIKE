@@ -5,7 +5,7 @@ import math
 
 from ml_logic.data_import import get_weather_data, get_divvy_data
 from ml_logic.cleaning import weather_cleaning, cleaning_divvy_gen, merge_divvy_weather, features_target
-from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
+from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process, compute_geohash_stations
 
 
 
@@ -38,7 +38,7 @@ def preprocess(target_chosen):
     print("features and target dataframes created")
 
     # preprocess features
-    preprocessor, X_processed_df = preprocess_features(X)
+    preprocessor, X_processed_df, df_stations_reduced = preprocess_features(X)
 
     print("features preprocessed")
 
@@ -54,12 +54,12 @@ def preprocess(target_chosen):
 
     print("Preprocessing of Training set is done")
 
-    return X_processed_df, y_processed_df, preprocessor
+    return X_processed_df, y_processed_df, preprocessor, df_stations_reduced
 
 
 # preprocessing a test set
 
-def preprocess_test(preprocessor, target_chosen):
+def preprocess_test(preprocessor, target_chosen, df_stations_reduced):
 
     # Import data
     quarter= os.environ.get("DIVVY_QUARTER_TEST")
@@ -72,9 +72,7 @@ def preprocess_test(preprocessor, target_chosen):
 
     # Clean data & merge data
 
-    station_name = os.environ.get("DIVVY_STATION_NAME")
-
-    clean_divvy_df = cleaning_divvy(raw_divvy_df,station_name)
+    clean_divvy_df = cleaning_divvy_gen(raw_divvy_df)
     clean_weather_df = weather_cleaning(raw_weather_df)
 
     merged_df = merge_divvy_weather(clean_divvy_df, clean_weather_df)
@@ -87,9 +85,13 @@ def preprocess_test(preprocessor, target_chosen):
 
     print("Test features and target dataframes created")
 
+    # Adding geohash
+    X_complete=X_test.merge(df_stations_reduced,how="left",on=["station_name"])
+    X_complete = X_complete.drop(columns=["station_name","station_id","dt_iso"])
+    #X_complete.geohash.replace(np.nan, "aaa", inplace=True)
     # transform the features test set
 
-    X_test_processed = preprocessor.transform(X_test)
+    X_test_processed = preprocessor.transform(X_complete)
 
     # preprocess target
 
