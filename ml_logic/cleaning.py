@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import datetime as dt
+from ml_logic.data_import import get_station_data
 
 def weather_cleaning(df):
     '''
@@ -25,89 +26,55 @@ def weather_cleaning(df):
 
     return df_clean_tmp
 
-def station_stats(df,station_id):
-    '''
-    This function computes the number of arrivals and departures for a given
-    station, identified by its station_id value. It finally computes
-    the ratio of departures over arrivals
-    '''
-
-    station_id = str(station_id)
-
-    df['started_at']=pd.to_datetime(df['started_at'])
-    df['ended_at']=pd.to_datetime(df['ended_at'])
-    df['hourly_data'] = df.started_at.dt.round('60min')
-
-
-    # Departures per station
-    df_departures=df[df['start_station_id']==station_id]
-    df_departures=df_departures[['started_at','hourly_data_started']]
-    df_departures=df_departures.rename(columns={'hourly_data_started':'hourly_data'})
-    df_departures=df_departures.groupby(by='hourly_data').count()
-
-
-    # Arrivals per station
-    df_arrivals=df[df['start_station_id']=='station_id']
-    df_arrivals=df_arrivals[['ended_at','hourly_data_ended']]
-    df_arrivals=df_arrivals.rename(columns={'hourly_data_ended':'hourly_data'})
-    df_arrivals=df_arrivals.groupby(by='hourly_data').count()
-
-    # Merge departures and arrivals to get a ratio
-    final_df=pd.merge(
-    df_departures,
-    df_arrivals,
-    how="outer",
-    on='hourly_data')
-
-    final_df.rename(columns={"ended_at":"nb_arrivals","started_at":"nb_departures"}, inplace=True)
-
-    # Replacing missing values by zero in case of no arrivals, no departures during a given hour
-    final_df["nb_departures"] = final_df["nb_departures"].replace(np.nan, 0)
-    final_df["nb_arrivals"] = final_df["nb_arrivals"].replace(np.nan, 0)
-
-    final_df['ratio']=final_df['started_at']/final_df['ended_at']
-
-    # Return the merged dataset
-    return final_df
-
-
-def cleaning_divvy(df,station_name):
+def cleaning_divvy_gen(df):
 
     df['started_at']=pd.to_datetime(df['started_at'])
     df['ended_at']=pd.to_datetime(df['ended_at'])
     df['hourly_data_started'] = df.started_at.dt.round('60min')
     df['hourly_data_ended'] = df.ended_at.dt.round('60min')
 
-    # Departures per station
-    df_departures=df[df['start_station_name']==station_name]
-    df_departures=df_departures[['started_at','hourly_data_started']]
-    df_departures=df_departures.rename(columns={'hourly_data_started':'hourly_data'})
-    df_departures=df_departures.groupby(by='hourly_data').count()
+    df_departures=df[[
+                    "start_station_name",
+                    "start_station_id",
+                    "hourly_data_started"]]
+
+    df_departures=df_departures.rename(columns={'hourly_data_started':'hourly_data',
+                                                "start_station_name":"station_name",
+                                                "start_station_id": "station_id"})
+
+    df_departures["nb_departures"]=1
+
+    df_dep_agg=df_departures.groupby(by=["station_name",
+                                        "station_id",
+                                        'hourly_data']).count().reset_index()
 
 
-    # Arrivals per station
-    df_arrivals=df[df['end_station_name']==station_name]
-    df_arrivals=df_arrivals[['ended_at','hourly_data_ended']]
-    df_arrivals=df_arrivals.rename(columns={'hourly_data_ended':'hourly_data'})
-    df_arrivals=df_arrivals.groupby(by='hourly_data').count()
+    df_arrivals=df[["end_station_name",
+                 "end_station_id",
+                 "hourly_data_ended"]]
 
-    # Merge departures and arrivals to get a ratio
+    df_arrivals=df_arrivals.rename(columns={'hourly_data_ended':'hourly_data',
+                                            "end_station_name":"station_name",
+                                            "end_station_id": "station_id"})
+    df_arrivals["nb_arrivals"]=1
+
+    df_arr_agg=df_arrivals.groupby(by=["station_name",
+                                            "station_id",
+                                            'hourly_data']).count().reset_index()
+
     merge_ratio=pd.merge(
-    df_departures,
-    df_arrivals,
+    df_dep_agg,
+    df_arr_agg,
     how="outer",
-    on='hourly_data')
+    on=['hourly_data',"station_name","station_id"])
 
-    merge_ratio.rename(columns={"started_at":"nb_departures","ended_at":"nb_arrivals"}, inplace=True)
 
     merge_ratio["nb_departures"] = merge_ratio["nb_departures"].replace(np.nan, 0)
     merge_ratio["nb_arrivals"] = merge_ratio["nb_arrivals"].replace(np.nan, 0)
 
     merge_ratio['ratio']=merge_ratio['nb_departures']/merge_ratio['nb_arrivals']
 
-    # Return the merged dataset
     return merge_ratio
-
 
 
 def merge_divvy_weather(df_bikes , df_weather):
@@ -129,7 +96,6 @@ def features_target(df, target):
     being created by identifying the target (nb_departures, nb_arrivals, ratio of the two)
     as an argument
     '''
-
 
     features_df = df.drop(columns=["ratio","nb_departures","nb_arrivals"])
     target_df =  df[target]
