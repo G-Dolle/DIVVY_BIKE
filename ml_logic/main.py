@@ -4,8 +4,10 @@ import numpy as np
 import math
 
 from ml_logic.data_import import get_weather_data, get_divvy_data
-from ml_logic.cleaning import weather_cleaning, station_stats, cleaning_divvy, merge_divvy_weather, features_target
+from ml_logic.cleaning import weather_cleaning, cleaning_divvy_gen, merge_divvy_weather, features_target
 from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
+
+
 
 
 def preprocess(target_chosen):
@@ -22,9 +24,7 @@ def preprocess(target_chosen):
 
     # Clean data & merge data
 
-    station_name = os.environ.get("DIVVY_STATION_NAME")
-
-    clean_divvy_df = cleaning_divvy(raw_divvy_df,station_name)
+    clean_divvy_df = cleaning_divvy_gen(raw_divvy_df)
     clean_weather_df = weather_cleaning(raw_weather_df)
 
     merged_df = merge_divvy_weather(clean_divvy_df, clean_weather_df)
