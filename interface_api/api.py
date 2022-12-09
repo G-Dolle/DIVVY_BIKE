@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 
 app = FastAPI()
-app.state.model=load_model()
+#
 
 app.add_middleware(
     CORSMiddleware,
