@@ -1,6 +1,7 @@
 
 import pandas as pd
 import numpy as np
+import datetime as dt
 
 def weather_cleaning(df):
     '''
@@ -74,42 +75,39 @@ def cleaning_divvy(df,station_name):
 
     df['started_at']=pd.to_datetime(df['started_at'])
     df['ended_at']=pd.to_datetime(df['ended_at'])
-    df['hourly_data'] = df.started_at.dt.round('60min')
+    df['hourly_data_started'] = df.started_at.dt.round('60min')
+    df['hourly_data_ended'] = df.ended_at.dt.round('60min')
 
-    # Focusing on departures
-    departures_df = df.drop(columns=["end_station_name","end_station_id","end_lat","end_lng","ended_at","start_lat","start_lng",
-                                    "member_casual"])
+    # Departures per station
+    df_departures=df[df['start_station_name']==station_name]
+    df_departures=df_departures[['started_at','hourly_data_started']]
+    df_departures=df_departures.rename(columns={'hourly_data_started':'hourly_data'})
+    df_departures=df_departures.groupby(by='hourly_data').count()
 
-    departures_df_reduced=departures_df.loc[departures_df["start_station_name"]==station_name]
-    departures_df_reduced["nb_departures"]=0
-    departures_df_final = pd.DataFrame(departures_df_reduced.groupby(['hourly_data',
-                                                      "start_station_name",
-                                                                      "start_station_id"],
-                                                     as_index=False)["nb_departures"].count())
 
-    # Focusing on arrivals
-    arrivals_df = df.drop(columns=["start_station_name","start_station_id","end_lat","end_lng","started_at","start_lat","start_lng",
-                                 "member_casual"])
+    # Arrivals per station
+    df_arrivals=df[df['end_station_name']==station_name]
+    df_arrivals=df_arrivals[['ended_at','hourly_data_ended']]
+    df_arrivals=df_arrivals.rename(columns={'hourly_data_ended':'hourly_data'})
+    df_arrivals=df_arrivals.groupby(by='hourly_data').count()
 
-    arrivals_df["nb_arrivals"]=0
-    arrivals_df_reduced=arrivals_df.loc[arrivals_df["end_station_name"]==station_name]
-    arrivals_df_final = pd.DataFrame(arrivals_df_reduced.groupby(['hourly_data',"end_station_name",
-                                                                      "end_station_id"], as_index=False)['nb_arrivals'].count())
+    # Merge departures and arrivals to get a ratio
+    merge_ratio=pd.merge(
+    df_departures,
+    df_arrivals,
+    how="outer",
+    on='hourly_data')
 
-    arrivals_df_final= arrivals_df_final.drop(columns=["end_station_name","end_station_id"])
+    merge_ratio.rename(columns={"started_at":"nb_departures","ended_at":"nb_arrivals"}, inplace=True)
 
-    final_df = arrivals_df_final.merge(departures_df_final, how="outer", on="hourly_data")
-    final_df.rename(columns={"start_station_name":"station_name","start_station_id":"station_id"}, inplace=True)
+    merge_ratio["nb_departures"] = merge_ratio["nb_departures"].replace(np.nan, 0)
+    merge_ratio["nb_arrivals"] = merge_ratio["nb_arrivals"].replace(np.nan, 0)
 
-    # Replacing missing values by zero in case of no arrivals, no departures during a given hour
+    merge_ratio['ratio']=merge_ratio['nb_departures']/merge_ratio['nb_arrivals']
 
-    final_df["nb_departures"] = final_df["nb_departures"].replace(np.nan, 0)
-    final_df["nb_arrivals"] = final_df["nb_arrivals"].replace(np.nan, 0)
+    # Return the merged dataset
+    return merge_ratio
 
-    # Computing the ratio of arrivals over departures
-    final_df['ratio']=final_df['nb_departures']/final_df['nb_arrivals']
-
-    return final_df
 
 
 def merge_divvy_weather(df_bikes , df_weather):
