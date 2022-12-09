@@ -26,18 +26,6 @@ def get_coordinates (address:object):
         latlong = None
     return latlong
 
-def get_stations_API():
-    """Return the stations dataframe
-    OPTIONAL: it can be a simple df - with only stations
-    or a complete df - with stations id, name and dpcapacity
-    TO BE CORRECTED: load to cloud and source address"""
-
-    url='https://gbfs.divvybikes.com/gbfs/en/station_information.json'
-    r = requests.get(url)
-    json = r.json()
-    station = pd.DataFrame(json['data']['stations'])
-    return station
-
 def get_stations(only_coordinates=False):
     """Return the stations dataframe
     OPTIONAL: it can be a simple df - with only stations
