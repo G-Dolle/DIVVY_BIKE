@@ -23,6 +23,6 @@ def get_divvy_data(year,quarter):
 
     path = os.path.join(os.path.expanduser(file_path))
 
-    weather_df = pd.read_csv(path)
+    trips_df = pd.read_csv(path)
 
-    return weather_df
+    return trips_df
