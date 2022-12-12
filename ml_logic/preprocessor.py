@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.preprocessing import OneHotEncoder, FunctionTransformer, StandardScaler
+import pygeohash as gh
 
 def transform_time_features(X: pd.DataFrame) -> np.ndarray:
 
@@ -48,23 +49,29 @@ def preprocess_features(X: pd.DataFrame) -> np.ndarray:
         weather_pipe = make_pipeline(StandardScaler())
         weather_features = ["temp","pressure","humidity","wind_speed","wind_deg","clouds_all"]
 
+        cat_transformer = OneHotEncoder(sparse=False, handle_unknown="ignore")
+
         final_preprocessor = ColumnTransformer(
                     [
                         ("time_preproc", time_pipe, ["hourly_data"]),
                         ("weather_scaler",weather_pipe, weather_features),
-                        #("geohash", geohash_pipe, lonlat_features),
+                         ("geohash encoding", cat_transformer,["geohash"])
                     ],
                     n_jobs=-1,
                 )
         return final_preprocessor
 
+
     preprocessor = create_sklearn_preprocessor()
+
+    X = X.drop(columns=["dt_iso"])
 
     X_processed = preprocessor.fit_transform(X)
 
     X_processed_df = pd.DataFrame(X_processed)
 
     return preprocessor, X_processed_df
+
 
 def target_process(df):
 

@@ -36,3 +36,11 @@ def get_divvy_data(year,quarter):
     trips_df = pd.read_csv(path)
 
     return trips_df
+
+def get_station_data():
+
+    path = os.environ.get("LOCAL_DATA_PATH_STATION")
+
+    station_df = pd.read_csv(path)
+
+    return station_df
