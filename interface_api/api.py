@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from interface_ui.flow.flow import transform_user_inputs,get_station_availability
 from interface_ui.flow.ui_utils import process_weather_inputs
-import pandas as pd
 import pickle as pkl
 from datetime import datetime
 
