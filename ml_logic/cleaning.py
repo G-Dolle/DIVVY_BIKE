@@ -6,7 +6,7 @@ from ml_logic.data_import import get_station_data
 import pygeohash as gh
 
 
-def compute_geohash_stations(precision: int = 5) -> np.ndarray:
+def compute_geohash_stations(precision: int = 4) -> np.ndarray:
     """
     Add a geohash (ex: “dr5rx”) of len “precision” = 5 by default
     corresponding to each (lon,lat) tuple, for pick-up, and drop-off
@@ -68,7 +68,7 @@ def cleaning_divvy_gen_agg(df):
                                         'hourly_data']).count().reset_index()
 
 
-    station_df = compute_geohash_stations(precision= 5)
+    station_df = compute_geohash_stations(precision= 4)
     df_dep_agg_geohash = df_dep_agg.merge(station_df, how="left", on="station_name")
     df_dep_agg_geohash = df_dep_agg_geohash.drop(columns=["station_name","station_id"])
     df_dep_final=df_dep_agg_geohash.groupby(by=["geohash",
@@ -183,3 +183,10 @@ def features_target(df, target):
     target_df =  df[target]
 
     return features_df, target_df
+
+def get_retained_geohash(df):
+
+    geohash_df = df[["geohash"]]
+    geohash_df = geohash_df.drop_duplicates()
+
+    return geohash_df

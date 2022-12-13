@@ -4,7 +4,7 @@ import numpy as np
 import math
 
 from ml_logic.data_import import get_weather_data, get_divvy_data
-from ml_logic.cleaning import compute_geohash_stations,weather_cleaning, cleaning_divvy_gen,cleaning_divvy_gen_agg, merge_divvy_weather, features_target
+from ml_logic.cleaning import compute_geohash_stations,get_retained_geohash, weather_cleaning, cleaning_divvy_gen,cleaning_divvy_gen_agg, merge_divvy_weather, features_target
 from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
 
 
@@ -36,6 +36,10 @@ def preprocess(target_chosen):
     X, y = features_target(merged_df, target_chosen)
 
     print("features and target dataframes created")
+
+    # Extracting geohash retained in the training set for prediction
+
+    #geohash_df = get_retained_geohash(X)
 
     # preprocess features
     preprocessor, X_processed_df = preprocess_features(X)
@@ -114,5 +118,5 @@ def preprocess_test(preprocessor, target_chosen):
 
 if __name__ == '__main__':
     target_chosen = os.environ.get("TARGET_CHOSEN")
-    X_processed_df, y_processed_df, preprocessor = preprocess(target_chosen)
+    X_processed_df, y_processed_df, geohash_df, preprocessor = preprocess(target_chosen)
     X_test_processed, y_test_processed=preprocess_test(preprocessor, target_chosen)
