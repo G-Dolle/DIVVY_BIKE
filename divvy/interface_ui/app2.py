@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 import requests
-import numpy as np
 import datetime
 import folium
 from streamlit_folium import folium_static
-from flow.flow import transform_user_inputs,get_station_availability
+
 
 #Title of the app
 st.title('THIS APP HELPS YOU FIND A \U0001F6B2 FOR YOUR RIDE \U0001F6B4')
@@ -27,44 +26,46 @@ with st.form('Please provide the below inputs'):
                                          value=1)
     st.form_submit_button('Find nearest station(s) with bikes available')
 
-#Transform user inputs (address and near stations) into model inputs
-nclose_stations=transform_user_inputs(departure_address,
-                                       num_nearest_stations)
+#Executing the API
+url='http://localhost:8000/predict'
+params=dict(
+            dep_datetime=[dep_datetime],
+            departure_address=[departure_address],
+            num_nearest_stations=[num_nearest_stations],
+        )
 
-#Obtain weather forecasts for Chicago
+response=requests.get(url=url, params=params)
+outcome=response.json()
 
-stations=get_station_availability(nclose_stations)
-lat_st=stations.lat.mean()
-lon_st=stations.lon.mean()
+#Extracting info from API response to streamlit
+lat_st=outcome['map_lat']
+lon_st=outcome['map_lon']
+lat_user=outcome['user_lat']
+lon_user=outcome['user_lon']
+
+stations=pd.DataFrame.from_dict(outcome['station'])
 
 #Initialize folium map with Chicago coordinates
-m=folium.Map(location=[lat_st,lon_st], zoom_start=17)
+m=folium.Map(location=[lat_st,lon_st], zoom_start=15)
+
+folium.Marker(location=[lat_user,lon_user],
+              popup="you're here",
+              icon=folium.Icon(color='blue'),
+              tooltip="you're here"
+              ).add_to(m)
 
 #Adding markers
 for index, row in stations.iterrows():
     if row['availability']==1:
-        color='green'
-        tooltip='available  :ok_hand::skin-tone-3:'
+        color_row='green'
+        tooltip_row='bikes available'
     else:
-        color='red'
-        tooltip='no bikes available :white_frowning_face:'
-    folium.Marker(location=[stations.lat, stations.lon],
-                  popup=stations.name,
-                  icon=folium.Icon(color=color, tooltip=tooltip),
+        color_row='red'
+        tooltip_row='no bikes available'
+    folium.Marker(location=[row['lat'], row['lon']],
+                  popup=row['name'],
+                  icon=folium.Icon(color=color_row),
+                  tooltip=tooltip_row
                   ).add_to(m)
 
 folium_static(m)
-
-"""url='https://taxifare2-bva7jbyfma-ew.a.run.app/predict'
-params=dict(
-            departure_datetime=[dep_datetime],
-            departure_latitude=[departure_latitude],
-            departure_longitude=[departure_longitude],
-        )
-
-response=requests.get(url=url, params=params)
-my_prediction=response.json()
-
-pred=round(my_prediction['fare'],3)
-
-st.header(f' ${pred}')"""

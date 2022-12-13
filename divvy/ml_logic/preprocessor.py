@@ -1,9 +1,11 @@
 import math
 import numpy as np
 import pandas as pd
+import pygeohash as gh
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.preprocessing import OneHotEncoder, FunctionTransformer, StandardScaler
+from ml_logic.data_import import get_station_data
 import pygeohash as gh
 
 def transform_time_features(X: pd.DataFrame) -> np.ndarray:
@@ -49,13 +51,45 @@ def preprocess_features(X: pd.DataFrame) -> np.ndarray:
         weather_pipe = make_pipeline(StandardScaler())
         weather_features = ["temp","pressure","humidity","wind_speed","wind_deg","clouds_all"]
 
+        # def compute_geohash_stations(precision: int = 4) -> np.ndarray:
+        #             """
+        #             Add a geohash (ex: "dr5rx") of len "precision" = 5 by default
+        #             corresponding to each (lon,lat) tuple, for pick-up, and drop-off
+        #             """
+        #             df_stations=get_station_data()
+        #             assert isinstance(df_stations, pd.DataFrame)
+
+        #             df_stations["geohash"] = df_stations.apply(lambda x: gh.encode(
+        #                 x.lat, x.lon, precision=precision),
+        #                                             axis=1)
+        #             df_stations_reduced=df_stations[["name","legacy_id",'geohash']]
+        #             df_stations_reduced.rename(columns={"name":"start_station_name",
+        #                                         "legacy_id":"station_id"}, inplace=True)
+
+        #             return df_stations_reduced
+
+        # geohash_categories = {
+        #     0:'dp3w',
+        #     1:'dp3t',
+        #     2:'dp3x',
+        #     3:'dp3v',
+        #     4:'dp3s'
+        #     # 5:'dp3u'
+        # }
+
+        # geohash_pipe = OneHotEncoder(
+        #     # categories=geohash_categories,
+        #     sparse=False,
+        #     handle_unknown="ignore")#),
+        # # remainder="passthrough"
+
         cat_transformer = OneHotEncoder(sparse=False, handle_unknown="ignore")
 
         final_preprocessor = ColumnTransformer(
                     [
                         ("time_preproc", time_pipe, ["hourly_data"]),
                         ("weather_scaler",weather_pipe, weather_features),
-                         ("geohash encoding", cat_transformer,["geohash"])
+                        ("geohash encoding", cat_transformer,["geohash"])
                     ],
                     n_jobs=-1,
                 )
@@ -71,6 +105,17 @@ def preprocess_features(X: pd.DataFrame) -> np.ndarray:
     X_processed_df = pd.DataFrame(X_processed)
 
     return preprocessor, X_processed_df
+
+
+def final_preproc(X_processed_df,df_stations_reduced):
+
+        # Calling Geohash function and creating Stations Dataframe
+        df_stations_reduced=compute_geohash_stations(precision=4)
+
+        # Merge divvy data & station data
+        X_complete=X.merge(df_stations_reduced,how='left',on=['start_station_name'])
+
+        return X_complete
 
 
 def target_process(df):
