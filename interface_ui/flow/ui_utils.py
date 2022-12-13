@@ -6,6 +6,8 @@ import os
 from sklearn.neighbors import NearestNeighbors
 from datetime import datetime
 from ml_logic.cleaning import weather_cleaning
+from ml_logic.data_import import get_station_data
+
 
 
 def get_coordinates (address:object):
@@ -32,8 +34,7 @@ def get_stations(only_coordinates=False):
     or a complete df - with stations id, name and dpcapacity
     TO BE CORRECTED: load to cloud and source address"""
 
-    address='/Users/mariofernandez/code/G-Dolle/DIVVY_BIKE/raw_data/data/stations.csv'
-    stations=pd.read_csv(address)
+    stations= get_station_data()
     if only_coordinates:
         stations.drop(columns=['id','name','dpcapacity'], inplace=True)
     stations.rename(columns={'latitude':'lat','longitude':'lon'},
@@ -48,10 +49,10 @@ def get_nearest_n_stations(lat:float,
                            lon:float,
                            top_n=1):
     """Return the top n stations closest to the user lat, lon"""
-    stations=get_stations(only_coordinates=False)
+    stations=get_station_data()
     NN=NearestNeighbors(n_neighbors=top_n,metric='haversine')
-    user_loc=pd.DataFrame(dict(lat=[lat],lon=[lon]))
     NN.fit(stations[['lat', 'lon']])
+    user_loc=pd.DataFrame(dict(lat=[lat],lon=[lon]))
     result=NN.kneighbors(user_loc)
     index=list(result[1][0])
     return stations.iloc[index]
@@ -156,4 +157,11 @@ def get_right_forecast(departure_date,departure_time,df):
     new_data = df_reduc[df_reduc["time_diff"]==cond]
     new_data.drop(columns=["user_input","date_input","date_weather","time_diff"], inplace=True)
 
+    return new_data
+
+def process_weather_inputs(departure_date,departure_time):
+    forecasts=chicago_weather_forecast()
+    forecast_df=convert_chicago_forecast_todf(forecasts)
+    forecast_cleaned=clean_forecast(forecast_df)
+    new_data=get_right_forecast(departure_date,departure_time, forecast_cleaned)
     return new_data

@@ -10,6 +10,16 @@ def get_weather_data():
 
     return weather_df
 
+
+def get_station_data():
+
+    path = os.environ.get("LOCAL_DATA_PATH_STATION")
+
+    station_df = pd.read_csv(path)
+
+    return station_df
+
+
 def get_divvy_data(year,quarter):
 
     year = str(year)
