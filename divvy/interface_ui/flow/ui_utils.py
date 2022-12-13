@@ -5,14 +5,8 @@ import urllib.parse
 import os
 from sklearn.neighbors import NearestNeighbors
 from datetime import datetime
-<<<<<<< HEAD:interface_ui/flow/ui_utils.py
-from ml_logic.data_import import get_divvy_data
-from ml_logic.cleaning import weather_cleaning, cleaning_divvy_gen_agg
-=======
-from divvy.ml_logic.cleaning import weather_cleaning
-from divvy.ml_logic.data_import import get_station_data
-
->>>>>>> master:divvy/interface_ui/flow/ui_utils.py
+from divvy.ml_logic.data_import import get_divvy_data, get_station_data
+from divvy.ml_logic.cleaning import weather_cleaning, cleaning_divvy_gen_agg
 
 
 def get_coordinates (address:object):
@@ -65,9 +59,11 @@ def get_nearest_n_stations(lat:float,
 def chicago_weather_forecast():
     '''Return a 5-day weather forecast for the city of Chicago'''
 
+    api_key= os.environ.get("WEATHER_API_KEY")
+
     BASE_URI="https://weather.lewagon.com"
     url=urllib.parse.urljoin(BASE_URI, "/data/2.5/forecast")
-    forecasts=requests.get(url, params={'lat': 41.87, 'lon': -87.62, 'units': 'metric'}).json()['list']
+    forecasts=requests.get(url, params={'lat': 41.87, 'lon': -87.62, 'units': 'metric','appid':api_key}).json()['list']
     for_list = list(forecasts)
     return for_list
 
@@ -174,7 +170,6 @@ def get_right_forecast(departure_date,departure_time,df,geohash_df):
     new_data = df_reduc[df_reduc["time_diff"]==cond]
     new_data.drop(columns=["user_input","date_input","date_weather","time_diff"], inplace=True)
 
-<<<<<<< HEAD:interface_ui/flow/ui_utils.py
     geohash_df['key'] = 0
     new_data['key'] = 0
 
@@ -201,13 +196,3 @@ def predict_set_cleaning(y,q, departure_date, departure_time):
                                       geohash_df)
 
     return predict_geohash
-=======
-    return new_data
-
-def process_weather_inputs(departure_date,departure_time):
-    forecasts=chicago_weather_forecast()
-    forecast_df=convert_chicago_forecast_todf(forecasts)
-    forecast_cleaned=clean_forecast(forecast_df)
-    new_data=get_right_forecast(departure_date,departure_time, forecast_cleaned)
-    return new_data
->>>>>>> master:divvy/interface_ui/flow/ui_utils.py
