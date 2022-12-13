@@ -5,8 +5,8 @@ import urllib.parse
 import os
 from sklearn.neighbors import NearestNeighbors
 from datetime import datetime
-from ml_logic.cleaning import weather_cleaning
-from ml_logic.data_import import get_station_data
+from divvy.ml_logic.cleaning import weather_cleaning
+from divvy.ml_logic.data_import import get_station_data
 
 
 

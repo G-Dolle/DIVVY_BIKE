@@ -4,7 +4,8 @@ import pandas as pd
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.preprocessing import OneHotEncoder, FunctionTransformer, StandardScaler
-import pygeohash as gh
+from divvy.ml_logic.cleaning import compute_geohash_stations
+
 
 def transform_time_features(X: pd.DataFrame) -> np.ndarray:
 
@@ -49,13 +50,34 @@ def preprocess_features(X: pd.DataFrame) -> np.ndarray:
         weather_pipe = make_pipeline(StandardScaler())
         weather_features = ["temp","pressure","humidity","wind_speed","wind_deg","clouds_all"]
 
+        geohash_categories = {
+            0:'dp3w',
+            1:'dp3t',
+            2:'dp3x',
+            3:'dp3v',
+            4:'dp3s',
+            5:'dp3u'
+        }
+
+        geohash_pipe = make_pipeline(
+                FunctionTransformer(compute_geohash_stations),
+                make_column_transformer(
+                    (OneHotEncoder(
+                        categories=geohash_categories,
+                        sparse=False,
+                        handle_unknown="ignore")),
+                    remainder="passthrough"
+                    )
+                )
+
+
         cat_transformer = OneHotEncoder(sparse=False, handle_unknown="ignore")
 
         final_preprocessor = ColumnTransformer(
                     [
                         ("time_preproc", time_pipe, ["hourly_data"]),
                         ("weather_scaler",weather_pipe, weather_features),
-                         ("geohash encoding", cat_transformer,["geohash"])
+                        ("geohash encoding", geohash_pipe,["geohash"])
                     ],
                     n_jobs=-1,
                 )

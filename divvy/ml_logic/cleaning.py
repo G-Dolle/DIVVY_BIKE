@@ -2,9 +2,8 @@
 import pandas as pd
 import numpy as np
 import datetime as dt
-from ml_logic.data_import import get_station_data
+from divvy.ml_logic.data_import import get_station_data
 import pygeohash as gh
-
 
 def compute_geohash_stations(precision: int = 5) -> np.ndarray:
     """
@@ -14,9 +13,10 @@ def compute_geohash_stations(precision: int = 5) -> np.ndarray:
 
     df_stations=get_station_data()
     assert isinstance(df_stations, pd.DataFrame)
-    df_stations["geohash"] = df_stations.apply(lambda x: gh.encode(
-        x.lat, x.lon, precision=precision),
-                                    axis=1)
+    df_stations["geohash"] = df_stations.apply(lambda x: gh.encode(x.lat,
+                                                                   x.lon,
+                                                                   precision=precision),
+                                               axis=1)
     df_stations_reduced=df_stations[["name","geohash"]]
     df_stations_reduced.rename(columns={"name":"station_name"}, inplace=True)
 
