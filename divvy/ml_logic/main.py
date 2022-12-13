@@ -3,9 +3,15 @@ import pandas as pd
 import numpy as np
 import math
 
+<<<<<<< HEAD:ml_logic/main.py
 from ml_logic.data_import import get_weather_data, get_divvy_data
 from ml_logic.cleaning import compute_geohash_stations,get_retained_geohash, weather_cleaning, cleaning_divvy_gen,cleaning_divvy_gen_agg, merge_divvy_weather, features_target
 from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
+=======
+from divvy.ml_logic.data_import import get_weather_data, get_divvy_data
+from divvy.ml_logic.cleaning import compute_geohash_stations,weather_cleaning, cleaning_divvy_gen,cleaning_divvy_gen_agg, merge_divvy_weather, features_target
+from divvy.ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
+>>>>>>> master:divvy/ml_logic/main.py
 
 
 
@@ -108,7 +114,9 @@ def preprocess_test(preprocessor, target_chosen):
     return X_test_processed, y_test_processed
 
 # train model
-
+def train_m (X: pd.DataFrame,
+             y: pd.DataFrame):
+    if model
 # Save model
 
 # Evaluate model
