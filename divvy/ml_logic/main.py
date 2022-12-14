@@ -8,8 +8,6 @@ from divvy.ml_logic.cleaning import compute_geohash_stations,weather_cleaning, c
 from divvy.ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
 from divvy.ml_logic.model import initialize_model_departure, initialize_model_arrival,train_model, save_model, load_model, load_preprocessor, predict
 
-
-
 def preprocess(target_chosen):
 
     # Import data
@@ -36,6 +34,10 @@ def preprocess(target_chosen):
     X, y = features_target(merged_df, target_chosen)
 
     print("features and target dataframes created")
+
+    # Extracting geohash retained in the training set for prediction
+
+    #geohash_df = get_retained_geohash(X)
 
     # preprocess features
     preprocessor, X_processed_df = preprocess_features(X)
