@@ -3,12 +3,10 @@ import pandas as pd
 import numpy as np
 import math
 
-from ml_logic.data_import import get_weather_data, get_divvy_data
-from ml_logic.cleaning import compute_geohash_stations,get_retained_geohash, weather_cleaning, cleaning_divvy_gen,cleaning_divvy_gen_agg, merge_divvy_weather, features_target
-from ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
-
-
-
+from divvy.ml_logic.data_import import get_weather_data, get_divvy_data
+from divvy.ml_logic.cleaning import compute_geohash_stations,weather_cleaning, cleaning_divvy_gen,cleaning_divvy_gen_agg, merge_divvy_weather, features_target
+from divvy.ml_logic.preprocessor import transform_time_features, preprocess_features, target_process
+from divvy.ml_logic.model import initialize_model_departure, initialize_model_arrival,train_model, save_model, load_model, load_preprocessor, predict
 
 def preprocess(target_chosen):
 
@@ -107,18 +105,39 @@ def preprocess_test(preprocessor, target_chosen):
 
     return X_test_processed, y_test_processed
 
-# train model
-def train_m (X: pd.DataFrame,
-             y: pd.DataFrame):
-    if model
-# Save model
-
-# Evaluate model
-
-# predict
-
-
 if __name__ == '__main__':
-    target_chosen = os.environ.get("TARGET_CHOSEN")
-    X_processed_df, y_processed_df, geohash_df, preprocessor = preprocess(target_chosen)
-    X_test_processed, y_test_processed=preprocess_test(preprocessor, target_chosen)
+    # get the preprocessed data of arrival
+    target_chosen = "nb_arrivals"
+    X_processed_df_arrival, y_processed_df_arrival, preprocessor_arrival = preprocess(target_chosen)
+    X_test_processed_arrival, y_test_processed_arrival=preprocess_test(preprocessor_arrival, target_chosen)
+    # initialize model
+    model_arrival = initialize_model_arrival()
+    # train model
+    model_arrival = train_model(model_arrival, X_processed_df_arrival, y_processed_df_arrival)
+    # save model
+    save_model('arrival', model_arrival, type="model")
+    # save preprocessor
+    save_model('arrival', preprocessor_arrival, type="preprocessor")
+    # predict
+    model_arrival = load_model(kind="arrival")
+    preprocessor_arrival = load_preprocessor(kind="arrival")
+    new_X = preprocessor_arrival(input_X)
+    y_pred_arrival = predict(model_arrival, new_X)
+
+    # get the preprocessed data of departure
+    target_chosen = "nb_departures"
+    X_processed_df_departure, y_processed_df_departure, preprocessor_departure = preprocess(target_chosen)
+    X_test_processed_departure, y_test_processed_departure=preprocess_test(preprocessor_departure, target_chosen)
+    # initialize model
+    model_departure = initialize_model_departure()
+    # train model
+    model_departure = train_model(model_departure, X_processed_df_departure, y_processed_df_departure)    
+    # save model
+    save_model('departure', model_departure, type="model")
+    # save preprocessor
+    save_model('departure', preprocessor_departure, type="preprocessor")
+    # predict
+    model_departure = load_model(kind="departure")
+    preprocessor_departure = load_preprocessor(kind="departure")
+    new_X = preprocessor_departure(input_X)
+    y_pred_departure = predict(model_departure, new_X)
