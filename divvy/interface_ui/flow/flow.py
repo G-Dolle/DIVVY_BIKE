@@ -1,6 +1,6 @@
-from interface_ui.flow.ui_utils import get_coordinates
-from interface_ui.flow.ui_utils import get_nearest_n_stations
-from ml_logic.model import availability
+from divvy.interface_ui.flow.ui_utils import get_coordinates
+from divvy.interface_ui.flow.ui_utils import get_nearest_n_stations
+from divvy.ml_logic.model import availability
 import pandas as pd
 
 def transform_user_inputs(departure_address:object,

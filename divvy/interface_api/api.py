@@ -1,16 +1,16 @@
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from interface_ui.flow.flow import transform_user_inputs,get_station_availability
-from interface_ui.flow.ui_utils import process_weather_inputs
+from divvy.interface_ui.flow.flow import transform_user_inputs,get_station_availability
+from divvy.interface_ui.flow.ui_utils import process_weather_inputs
 import pickle as pkl
 from datetime import datetime
 
 app = FastAPI()
-app.state.model_dep=pkl.load(open('models/elasticnet_departures.pickle','rb'))
-app.state.model_arr=pkl.load(open('models/elasticnet_arrivals.pickle','rb'))
-app.state.prep_dep=pkl.load(open('preprocessors/preprocessor_dep.pickle','rb'))
-app.state.prep_dep=pkl.load(open('preprocessors/preprocessor_arr.pickle','rb'))
+app.state.model_dep=pkl.load(open('divvy/models/elasticnet_departures.pickle','rb'))
+app.state.model_arr=pkl.load(open('divvy/models/elasticnet_arrivals.pickle','rb'))
+app.state.prep_dep=pkl.load(open('divvy/preprocessors/preprocessor_dep.pickle','rb'))
+app.state.prep_dep=pkl.load(open('divvy/preprocessors/preprocessor_arr.pickle','rb'))
 
 app.add_middleware(
     CORSMiddleware,
