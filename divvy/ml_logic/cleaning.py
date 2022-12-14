@@ -4,7 +4,9 @@ import numpy as np
 import datetime as dt
 from divvy.ml_logic.data_import import get_station_data
 import pygeohash as gh
+import os
 
+precision_level= int(os.environ.get("PRECISION_LEVEL"))
 
 def compute_geohash_stations(precision: int = 4) -> np.ndarray:
     """
@@ -69,7 +71,7 @@ def cleaning_divvy_gen_agg(df):
                                         'hourly_data']).count().reset_index()
 
 
-    station_df = compute_geohash_stations(precision= 4)
+    station_df = compute_geohash_stations(precision = precision_level)
     df_dep_agg_geohash = df_dep_agg.merge(station_df, how="left", on="station_name")
     df_dep_agg_geohash = df_dep_agg_geohash.drop(columns=["station_name","station_id"])
     df_dep_final=df_dep_agg_geohash.groupby(by=["geohash",
@@ -184,3 +186,10 @@ def features_target(df, target):
     target_df =  df[target]
 
     return features_df, target_df
+
+def get_retained_geohash(df):
+
+    geohash_df = df[["geohash"]]
+    geohash_df = geohash_df.drop_duplicates()
+
+    return geohash_df

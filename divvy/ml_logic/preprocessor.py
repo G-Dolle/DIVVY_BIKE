@@ -5,7 +5,7 @@ import pygeohash as gh
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.preprocessing import OneHotEncoder, FunctionTransformer, StandardScaler
-from ml_logic.data_import import get_station_data
+from divvy.ml_logic.data_import import get_station_data
 import pygeohash as gh
 
 def transform_time_features(X: pd.DataFrame) -> np.ndarray:

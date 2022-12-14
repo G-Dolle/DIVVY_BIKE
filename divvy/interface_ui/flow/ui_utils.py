@@ -5,9 +5,8 @@ import urllib.parse
 import os
 from sklearn.neighbors import NearestNeighbors
 from datetime import datetime
-from divvy.ml_logic.cleaning import weather_cleaning
-from divvy.ml_logic.data_import import get_station_data
-
+from divvy.ml_logic.data_import import get_divvy_data, get_station_data
+from divvy.ml_logic.cleaning import weather_cleaning, cleaning_divvy_gen_agg
 
 
 def get_coordinates (address:object):
@@ -60,11 +59,13 @@ def get_nearest_n_stations(lat:float,
 def chicago_weather_forecast():
     '''Return a 5-day weather forecast for the city of Chicago'''
 
+    api_key= os.environ.get("WEATHER_API_KEY")
+
     BASE_URI="https://weather.lewagon.com"
     url=urllib.parse.urljoin(BASE_URI, "/data/2.5/forecast")
-    forecasts=requests.get(url, params={'lat': 41.87, 'lon': -87.62, 'units': 'metric'}).json()['list']
-    return forecasts
-
+    forecasts=requests.get(url, params={'lat': 41.87, 'lon': -87.62, 'units': 'metric','appid':api_key}).json()['list']
+    for_list = list(forecasts)
+    return for_list
 
 
 def convert_chicago_forecast_todf(forecasts:list):
@@ -137,10 +138,22 @@ def clean_forecast(df):
 
     return cleaned_df
 
-def get_right_forecast(departure_date,departure_time,df):
+def get_retained_geohash(y,q):
+
+    raw_divvy_df = get_divvy_data(y,q)
+    clean_divvy_df = cleaning_divvy_gen_agg(raw_divvy_df)
+
+
+    geohash_df = clean_divvy_df[["geohash"]]
+    geohash_df = geohash_df.drop_duplicates()
+
+    return geohash_df
+
+def get_right_forecast(departure_date,departure_time,df,geohash_df):
     """
-    Return the closest hourly weather forecast to the date and time inputs
-    provided by the end-user
+    Returns the closest hourly weather forecast to the date and time inputs
+    provided by the end-user and with the "geohash" variable - 1 obs corresponds
+    to 1 geohash that can be found in the training set
     """
 
     full_time_input= datetime.combine(departure_date,departure_time)
@@ -157,11 +170,29 @@ def get_right_forecast(departure_date,departure_time,df):
     new_data = df_reduc[df_reduc["time_diff"]==cond]
     new_data.drop(columns=["user_input","date_input","date_weather","time_diff"], inplace=True)
 
-    return new_data
+    geohash_df['key'] = 0
+    new_data['key'] = 0
 
-def process_weather_inputs(departure_date,departure_time):
-    forecasts=chicago_weather_forecast()
-    forecast_df=convert_chicago_forecast_todf(forecasts)
-    forecast_cleaned=clean_forecast(forecast_df)
-    new_data=get_right_forecast(departure_date,departure_time, forecast_cleaned)
-    return new_data
+    predict_geohash = geohash_df.merge(new_data, on='key', how='outer')
+
+    return predict_geohash
+
+
+def predict_set_cleaning(y,q, departure_date, departure_time):
+
+    """
+    Returns the same output as the get_right_forecast function but runs
+    all previous necessary steps at once
+    """
+    forecasts = chicago_weather_forecast()
+    forecast_df = convert_chicago_forecast_todf(forecasts)
+    cleaned_df = clean_forecast(forecast_df)
+
+    geohash_df = get_retained_geohash(y,q)
+
+    predict_geohash = get_right_forecast(departure_date,
+                                      departure_time,
+                                      cleaned_df,
+                                      geohash_df)
+
+    return predict_geohash
