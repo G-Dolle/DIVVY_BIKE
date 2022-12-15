@@ -10,12 +10,12 @@ from divvy.ml_logic.data_import import get_station_data
 
 
 
-st.set_page_config(page_title="Bikes stations density")
+st.set_page_config(page_title="Bikes stations density", layout="centered")
 
 st.markdown("# Bikes stations density")
-st.markdown("## Heatmap")
+st.markdown("### Heatmap")
 
-st.sidebar.header("Stations Density")
+st.sidebar.header("Density")
 
 
 station_df = get_station_data()
@@ -41,8 +41,8 @@ stationArr = station_df_red.values
 m.add_child(plugins.HeatMap(stationArr, radius=11))
 
 
-folium_static(m, width=800, height=800)
+folium_static(m, width=500, height=500)
 
-st.markdown("## Map of stations")
+st.markdown("### Map of stations")
 
 st.map(station_df_red)
